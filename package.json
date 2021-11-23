@@ -1,0 +1,22 @@
+{
+  "name": "discord-mc-server-control",
+  "version": "1.0.0",
+  "description": "discord bot for remote control of mc server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gamester1128/discord-mc-server-control.git"
+  },
+  "author": "deez nuts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gamester1128/discord-mc-server-control/issues"
+  },
+  "homepage": "https://github.com/Gamester1128/discord-mc-server-control#readme",
+  "dependencies": {
+    "discord.js": "^13.3.1"
+  }
+}
