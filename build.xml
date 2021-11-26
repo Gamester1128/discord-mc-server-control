@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project default="run" name="Discord MC Remote Server - compile and run JAVA class">
+    
+    <property name="src" value="src"/>
+    <property name="bin" value="bin"/>
+    <property name="fakejar" value="fakeserver"/>
+    
     <target name="run" depends="compile">
         <java classname="ConsoleProcess" classpath="bin"/>
     </target>
+    
     <target name="compile">
         <javac includeantruntime="false" srcdir="src" destdir="bin"/>
     </target>
+
+    <target name="testing" depends
 </project>
