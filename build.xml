@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project default="run" name="Discord MC Remote Server - compile and run JAVA class">
-    
-    <property name="src" value="src"/>
-    <property name="bin" value="bin"/>
-    <property name="fakejar" value="fakeserver"/>
-    
+    <mkdir dir="bin"/>
+    <property name="src.dir" value="src"/>
+    <property name="class.dir" value="bin"/>
+    <property name="testing-main-class" value="testing.FakeMCServer"/>
+    <property name="fakemcjar.dir" value="fakemc/fakemc.jar"/>
+    <property name="root.dir" value="/"/>
+
     <target name="run" depends="compile">
-        <java classname="ConsoleProcess" classpath="bin"/>
+        <java classname="ConsoleProcess" classpath="${class.dir}"/>
     </target>
     
-    <target name="compile">
-        <javac includeantruntime="false" srcdir="src" destdir="bin"/>
+    <target name="compile" depends="clean">
+        <mkdir dir="bin"/>
+        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${class.dir}"/>
     </target>
 
-    <target name="testing" depends
+    <target name="testing" depends="compile">
+        <jar destfile="${fakemcjar.dir}" basedir="${class.dir}">
+            <fileset dir="${class.dir}">
+                <include name="testing/FakeMCServer.jar"/>
+            </fileset>
+            <manifest>
+                <attribute name="Main-Class" value="${testing-main-class}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="fakemc"/>
+        <delete dir="${class.dir}"/>
+    </target>
 </project>
