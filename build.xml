@@ -5,7 +5,9 @@
     <property name="src.dir" value="src"/>
     <property name="class.dir" value="bin"/>
     <property name="testing-main-class" value="testing.FakeMCServer"/>
-    <property name="fakemcjar.dir" value="fakemc/fakemc.jar"/>
+    <property name="fakeserver.dir" value="fakeserver"/>
+    <property name="fakeserver.jar" value="fakeserver.jar"/>
+    <property name="testing.class.dir" value="${class.dir}/testing"/>
     <property name="root.dir" value="/"/>
 
     <target name="run" depends="compile">
@@ -17,10 +19,11 @@
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${class.dir}"/>
     </target>
 
-    <target name="testing" depends="compile">
-        <jar destfile="${fakemcjar.dir}" basedir="${class.dir}">
+    <target name="testing-jar" depends="compile">
+    <mkdir dir="fakeserver"/>
+        <jar destfile="${fakeserver.dir}/${fakeserver.jar}" basedir="${class.dir}">
             <fileset dir="${class.dir}">
-                <include name="testing/FakeMCServer.jar"/>
+                <include name="testing/*"/>
             </fileset>
             <manifest>
                 <attribute name="Main-Class" value="${testing-main-class}"/>
@@ -28,8 +31,12 @@
         </jar>
     </target>
 
+    <target name="testing" depends="testing-jar">
+        
+    </target>
+
     <target name="clean">
-        <delete dir="fakemc"/>
+        <delete dir="${fakeserver.dir}"/>
         <delete dir="${class.dir}"/>
     </target>
 </project>
