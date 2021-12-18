@@ -15,7 +15,7 @@ public class FakeMCServer {
     };
 
     public static void main(String[] args) {
-        new Thread(inputThread, "Input Thread").start();
+        new Thread(inputThread, "FakeServer Input Thread").start();
 
         int i = 0;
         while(true) {

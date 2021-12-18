@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project default="run" name="Discord MC Remote Server - compile and run JAVA class">
+<project default="testing" name="Discord MC Remote Server - compile and run JAVA class">
     <mkdir dir="bin"/>
     <property name="src.dir" value="src"/>
     <property name="class.dir" value="bin"/>
@@ -13,14 +13,14 @@
     <target name="run" depends="compile">
         <java classname="ConsoleProcess" classpath="${class.dir}"/>
     </target>
-    
-    <target name="compile" depends="clean">
+
+    <target name="compile">
         <mkdir dir="bin"/>
-        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${class.dir}"/>
+        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${class.dir}" />
     </target>
 
     <target name="testing-jar" depends="compile">
-    <mkdir dir="fakeserver"/>
+        <mkdir dir="fakeserver"/>
         <jar destfile="${fakeserver.dir}/${fakeserver.jar}" basedir="${class.dir}">
             <fileset dir="${class.dir}">
                 <include name="testing/*"/>
@@ -32,7 +32,7 @@
     </target>
 
     <target name="testing" depends="testing-jar">
-        
+        <java classname="ConsoleProcess" classpath="${class.dir}"/>
     </target>
 
     <target name="clean">
