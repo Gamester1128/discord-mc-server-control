@@ -4,64 +4,65 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.Scanner;
-
-import javax.swing.event.SwingPropertyChangeSupport;
 
 public class ConsoleProcess {
 
-    private static final String serverpath = "fakeserver/fakeserver.jar";
+    private ProcessBuilder pb;
+    private Process p;
+    private BufferedWriter bw;
+    private BufferedReader br;
 
-    public static void main(String[] args) {
-        
-        final Process p;
-        ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "run2.bat").redirectErrorStream(true);
-        //pb.directory(new File("C:\\Dev\\git\\discord-mc-server-control\\fakeserver"));
-        pb.directory(new File("C:\\mc server\\vanilla\\1.18 prerel5"));
+    public ConsoleProcess(String commandToExecute) {
+        if (System.getProperty("os.name").toLowerCase().contains("windows"))
+            pb = new ProcessBuilder("cmd.exe", "/c", commandToExecute);
+        else if (System.getProperty("os.name").toLowerCase().contains("linux"))
+            pb = new ProcessBuilder("/bin/bash", "-c", commandToExecute);
+        else {
+            System.out.println(
+                    "What niche OS you using there bud.. or how ignorant am I? OS: " + System.getProperty("os.name"));
+            System.exit(1);
+        }
+        pb.directory(new File(System.getProperty("user.dir")));
+        pb.redirectErrorStream(true);
+    }
+
+    public void start() {
         try {
             p = pb.start();
-            
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            System.out.println(pb.directory());
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            //System.out.println("Waiting my queen");
-            //new Scanner(System.in).nextLine();
-
-            String line = null;
-
-            new Thread(()->{
-                BufferedWriter scan = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
-                Scanner scanner = new Scanner(System.in);
-
-                while (true){
-                    String next = scanner.nextLine();
-                    try {
-                        System.out.println("passed: " + next);
-                        scan.write(next);
-                        scan.write("\n");
-                        scan.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                
-            }).start();
-
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-            }
-
-            System.out.println("CLosing...");
-            br.close();
+            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.exit(1);
     }
 
+    public void end() {
+        try {
+            br.close();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        p.destroy();
+    }
+
+    public String readLine() {
+        try {
+            String line = br.readLine();
+            return line;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void writeLine(String line) {
+        try {
+            bw.write(line);
+            bw.write("\n");
+            bw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

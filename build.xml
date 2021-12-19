@@ -2,16 +2,17 @@
 
 <project default="testing" name="Discord MC Remote Server - compile and run JAVA class">
     <mkdir dir="bin"/>
+    <property name="root.dir" value="/"/>
     <property name="src.dir" value="src"/>
     <property name="class.dir" value="bin"/>
-    <property name="testing-main-class" value="testing.FakeMCServer"/>
-    <property name="fakeserver.dir" value="fakeserver"/>
-    <property name="fakeserver.jar" value="fakeserver.jar"/>
+    <property name="main.class" value="Main"/>
+    <property name="testing.main.class" value="testing.FakeMCServer"/>
     <property name="testing.class.dir" value="${class.dir}/testing"/>
-    <property name="root.dir" value="/"/>
+    <property name="fakeserver.jar" value="fakeserver.jar"/>
+    <property name="fakeserver.dir" value="fakeserver"/>
 
     <target name="run" depends="compile">
-        <java classname="ConsoleProcess" classpath="${class.dir}"/>
+        <java classname="${main.class}" classpath="${class.dir}"/>
     </target>
 
     <target name="compile">
@@ -26,13 +27,13 @@
                 <include name="testing/*"/>
             </fileset>
             <manifest>
-                <attribute name="Main-Class" value="${testing-main-class}"/>
+                <attribute name="Main-Class" value="${testing.main.class}"/>
             </manifest>
         </jar>
     </target>
 
     <target name="testing" depends="testing-jar">
-        <java classname="ConsoleProcess" classpath="${class.dir}"/>
+        <java classname="${main.class}" classpath="${class.dir}"/>
     </target>
 
     <target name="clean">
