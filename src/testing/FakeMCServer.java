@@ -10,6 +10,7 @@ public class FakeMCServer {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String input = scanner.nextLine();
+            if (input.equals("stop")) System.exit(0);
             System.out.println("[CANT BE ASKED FOR TIME] [FAKEMINECRAFTSERVER/ERROR] : no commands exist! input sent: " + input);
         }
     };

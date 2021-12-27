@@ -13,10 +13,12 @@ public class ConsoleProcess {
     private BufferedReader br;
 
     public ConsoleProcess(String commandToExecute) {
-        if (System.getProperty("os.name").toLowerCase().contains("windows"))
+        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            System.out.println(System.getProperty("os.name"));
             pb = new ProcessBuilder("cmd.exe", "/c", commandToExecute);
-        else if (System.getProperty("os.name").toLowerCase().contains("linux"))
+        } else if (System.getProperty("os.name").toLowerCase().contains("linux")) {
             pb = new ProcessBuilder("/bin/bash", "-c", commandToExecute);
+        }
         else {
             System.out.println(
                     "What niche OS you using there bud.. or how ignorant am I? OS: " + System.getProperty("os.name"));
@@ -28,6 +30,7 @@ public class ConsoleProcess {
 
     public void start() {
         try {
+            System.out.println(pb.directory());
             p = pb.start();
             br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));

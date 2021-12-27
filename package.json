@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Gamester1128/discord-mc-server-control#readme",
   "dependencies": {
+    "dgram": "^1.0.1",
     "discord.js": "^13.3.1"
   }
 }
