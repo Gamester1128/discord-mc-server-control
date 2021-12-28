@@ -16,7 +16,7 @@ public class Server implements Runnable {
     private DatagramSocket socket;
     private boolean running = false;
     private ArrayList<String> cpOuts = new ArrayList<String>();
-    private ServerClient discordBot;
+    private volatile ServerClient discordBot;
 
     private Thread senderThread;
     private Runnable senderRunnable;
@@ -24,6 +24,7 @@ public class Server implements Runnable {
     private int selectedSenderThreadNum = 0;
 
     private boolean disconnected = true;
+    private ArrayList<ServerClient> clients = new ArrayList<>();
 
     public Server(int port) {
         cp = new ConsoleProcess("cd fakeserver && java -jar fakeserver.jar");
@@ -74,10 +75,7 @@ public class Server implements Runnable {
                 if (discordBot == null)
                     continue;
 
-                if (discordBot.responded) {
-                    discordBot.responded = false;
-                    discordBot.attempts = MAX_ATTEMPTS;
-                } else if (discordBot.attempts > 1)
+                if (discordBot.attempts > 1)
                     discordBot.attempts--;
                 else
                     disconnect();
@@ -94,7 +92,6 @@ public class Server implements Runnable {
 
     private void process(DatagramPacket packet) {
         String data = new String(packet.getData());
-
         if (rawPackets)
             System.out.println(new ServerClient(packet.getAddress(), packet.getPort()) + "R:" + data);
 
@@ -117,7 +114,7 @@ public class Server implements Runnable {
         } else if (data.startsWith("/i/")) {
             if (discordBot == null)
                 return;
-            discordBot.responded = true;
+            discordBot.attempts = MAX_ATTEMPTS;
         }
     }
 
@@ -130,8 +127,12 @@ public class Server implements Runnable {
         cpOuts.clear();
     }
 
-    public void send(ServerClient client, String message) {
+    public void sendToAll(ArrayList<ServerClient> clients, String message) {
+        for (ServerClient client : clients)
+            send(client, message);
+    }
 
+    public void send(ServerClient client, String message) {
         byte[] data = message.getBytes();
         DatagramPacket packet = new DatagramPacket(data, data.length, client.ip, client.port);
 
@@ -146,7 +147,7 @@ public class Server implements Runnable {
         }
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         System.out.println("Successfully disconnected client: " + discordBot);
         discordBot = null;
     }

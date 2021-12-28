@@ -1,4 +1,7 @@
 const { Client, Intents, Emoji } = require('discord.js');
+const copypasta = require("./copypasta.js")
+
+//const channel = Client.channels.cache.get(912818100305559585);
 
 const client = new Client({
     intents: [
@@ -12,45 +15,23 @@ client.once('ready', () => {
 
 });
 
-const susASCII = "⠀⠀⠀⡯⡯⡾⠝⠘⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢊⠘⡮⣣⠪⠢⡑⡌\n\
-⠀⠀⠀⠟⠝⠈⠀⠀⠀⠡⠀⠠⢈⠠⢐⢠⢂⢔⣐⢄⡂⢔⠀⡁⢉⠸⢨⢑⠕⡌\n\
-⠀⠀⡀⠁⠀⠀⠀⡀⢂⠡⠈⡔⣕⢮⣳⢯⣿⣻⣟⣯⣯⢷⣫⣆⡂⠀⠀⢐⠑⡌\n\
-⢀⠠⠐⠈⠀⢀⢂⠢⡂⠕⡁⣝⢮⣳⢽⡽⣾⣻⣿⣯⡯⣟⣞⢾⢜⢆⠀⡀⠀⠪\n\
-⣬⠂⠀⠀⢀⢂⢪⠨⢂⠥⣺⡪⣗⢗⣽⢽⡯⣿⣽⣷⢿⡽⡾⡽⣝⢎⠀⠀⠀⢡\n\
-⣿⠀⠀⠀⢂⠢⢂⢥⢱⡹⣪⢞⡵⣻⡪⡯⡯⣟⡾⣿⣻⡽⣯⡻⣪⠧⠑⠀⠁⢐\n\
-⣿⠀⠀⠀⠢⢑⠠⠑⠕⡝⡎⡗⡝⡎⣞⢽⡹⣕⢯⢻⠹⡹⢚⠝⡷⡽⡨⠀⠀⢔\n\
-⣿⡯⠀⢈⠈⢄⠂⠂⠐⠀⠌⠠⢑⠱⡱⡱⡑⢔⠁⠀⡀⠐⠐⠐⡡⡹⣪⠀⠀⢘\n\
-⣿⣽⠀⡀⡊⠀⠐⠨⠈⡁⠂⢈⠠⡱⡽⣷⡑⠁⠠⠑⠀⢉⢇⣤⢘⣪⢽⠀⢌⢎\n\
-⣿⢾⠀⢌⠌⠀⡁⠢⠂⠐⡀⠀⢀⢳⢽⣽⡺⣨⢄⣑⢉⢃⢭⡲⣕⡭⣹⠠⢐⢗\n\
-⣿⡗⠀⠢⠡⡱⡸⣔⢵⢱⢸⠈⠀⡪⣳⣳⢹⢜⡵⣱⢱⡱⣳⡹⣵⣻⢔⢅⢬⡷\n\
-⣷⡇⡂⠡⡑⢕⢕⠕⡑⠡⢂⢊⢐⢕⡝⡮⡧⡳⣝⢴⡐⣁⠃⡫⡒⣕⢏⡮⣷⡟\n\
-⣷⣻⣅⠑⢌⠢⠁⢐⠠⠑⡐⠐⠌⡪⠮⡫⠪⡪⡪⣺⢸⠰⠡⠠⠐⢱⠨⡪⡪⡰\n\
-⣯⢷⣟⣇⡂⡂⡌⡀⠀⠁⡂⠅⠂⠀⡑⡄⢇⠇⢝⡨⡠⡁⢐⠠⢀⢪⡐⡜⡪⡊\n\
-⣿⢽⡾⢹⡄⠕⡅⢇⠂⠑⣴⡬⣬⣬⣆⢮⣦⣷⣵⣷⡗⢃⢮⠱⡸⢰⢱⢸⢨⢌\n\
-⣯⢯⣟⠸⣳⡅⠜⠔⡌⡐⠈⠻⠟⣿⢿⣿⣿⠿⡻⣃⠢⣱⡳⡱⡩⢢⠣⡃⠢⠁\n\
-⡯⣟⣞⡇⡿⣽⡪⡘⡰⠨⢐⢀⠢⢢⢄⢤⣰⠼⡾⢕⢕⡵⣝⠎⢌⢪⠪⡘⡌⠀\n\
-⡯⣳⠯⠚⢊⠡⡂⢂⠨⠊⠔⡑⠬⡸⣘⢬⢪⣪⡺⡼⣕⢯⢞⢕⢝⠎⢻⢼⣀⠀\n\
-⠁⡂⠔⡁⡢⠣⢀⠢⠀⠅⠱⡐⡱⡘⡔⡕⡕⣲⡹⣎⡮⡏⡑⢜⢼⡱⢩⣗⣯⣟\n\
-⢀⢂⢑⠀⡂⡃⠅⠊⢄⢑⠠⠑⢕⢕⢝⢮⢺⢕⢟⢮⢊⢢⢱⢄⠃⣇⣞⢞⣞⢾\n\
-⢀⠢⡑⡀⢂⢊⠠⠁⡂⡐⠀⠅⡈⠪⠪⠪⠣⠫⠑⡁⢔⠕⣜⣜⢦⡰⡎⡯⡾⡽";
-
 client.on('messageCreate', (message) => {
 
-    if (message.content === 'ping') {
-        message.react('👀')
-        //message.reply({
-        //    content: "<:eyes:>"
-        //})
-    }
-    
-    if (message.content === "deleena" ) {
-        message.reply({ content: susASCII
-    })
-    }
+    //command for bot
+    if (message.content.startsWith('/')) {
+        var command = message.content.substring(1, message.content.length);
+        console.log(command);
 
-    if (message.content === "rahul") {
-        message.reply({ content: "the victim of deleena's wrenches!!!!! arghhhhh" })
+        sendToCP('/m/' + command + '/e/', PORT, HOST);
     }
+    //channel = client.channels.cache.get('912818100305559585');
+    //channel.send('content');
+    if (message.content.toLowerCase().includes('checkmate argument')) message.reply({ content: copypasta.checkmateArgument })
+    else if (message.content.includes('rahul')) message.reply({ content: "the victim of someone's evil wrenches!!!!! his poor lambda duck friend Sadge" })
+    else if (message.content === 'ping') message.react('👀')
+    else if (message.content === 'deleena') message.channel.send({ content: copypasta.susASCII })
+    else if (message.content.toLowerCase().includes('peak')) message.channel.send(copypasta.peakingAnimeGirl);
+    else if (message.content.toLowerCase().includes('sadge')) message.channel.send(copypasta.sadge);
 
 })
 
@@ -60,7 +41,7 @@ client.login(token);
 
 
 
-// SERVER SIDE STUFF
+// CLIENT FOR CONSOLE PROCESS SIDE STUFF
 
 const dgram = require('dgram');
 const cp_client = dgram.createSocket('udp4');
@@ -99,3 +80,4 @@ process.on("SIGINT", () => {
         process.exit();
     });
 });
+
