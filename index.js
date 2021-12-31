@@ -1,5 +1,7 @@
-const { Client, Intents, Emoji } = require('discord.js');
+const { Client, Intents, Emoji, ClientUser } = require('discord.js');
 const copypasta = require("./copypasta.js")
+
+const CHANNEL_GENERAL = '912818100305559585';
 
 //const channel = Client.channels.cache.get(912818100305559585);
 
@@ -39,26 +41,49 @@ client.on('messageCreate', (message) => {
 const { token } = require('./config.json');
 client.login(token);
 
-
-
 // CLIENT FOR CONSOLE PROCESS SIDE STUFF
 
+const PRINT_PACKETS = true;
+
+const PREFIX_PING = '/i/';
+const PREFIX_DISCONNECT = '/d/';
+const PREFIX_CONNECT = '/c/';
+const PREFIX_OUTPUT = '/o/';
+const PREFIX_OUTPUT_START = '/s/'
+const PREFIX_OUTPUT_END = '/e/'
+const PREFIX_MESSAGE = "/m/";
+
 const dgram = require('dgram');
+const { channel } = require('diagnostics_channel');
 const cp_client = dgram.createSocket('udp4');
 
 const PORT = 7272;
 const HOST = '127.0.0.1';
 //server.bind(PORT, HOST);
 
+var output = []
+
 cp_client.on('listening', () => {
     console.log("DiscordBot ConsoleProcess Listener started on [" + HOST + "|" + PORT + "]");
 });
 
 cp_client.on('message', (msg, rinfo) => {
-    message = msg.toString();
-    if (message === "/i/") sendToCP('/i/', PORT, HOST);
-    console.log('HI');
+    var message = msg.toString();
+    if (PRINT_PACKETS) console.log('R:' + message);
+    if (message.startsWith(PREFIX_PING)) sendToCP(PREFIX_PING, PORT, HOST);
+    else if (message.startsWith(PREFIX_OUTPUT_START)) output = new Array(parseInt(message.substring(3)));
+    else if (message.startsWith(PREFIX_OUTPUT)) output.push(message.substring(3));
+    else if (message.startsWith(PREFIX_OUTPUT_END)) flushToDiscord();
+
 });
+
+function flushToDiscord() {
+    var message = output.join('');
+    
+    var size = message % 4000;
+     
+    client.channels.cache.get(CHANNEL_GENERAL).send(message);
+}
 
 function sendToCP(msg, port, host) {
     cp_client.send(msg, port, host, sendingCallback);
@@ -69,10 +94,10 @@ function sendingCallback(err) {
     if (err) throw err;
 }
 
-cp_client.send('/c/', PORT, HOST, sendingCallback)
+cp_client.send(PREFIX_CONNECT, PORT, HOST, sendingCallback)
 
 process.on("SIGINT", () => {
-    sendToCP('/d/', PORT, HOST);
+    sendToCP(PREFIX_DISCONNECT, PORT, HOST);
     console.log("Closing discord bot.");
     client.destroy();
     process.nextTick(() => {

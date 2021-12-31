@@ -12,20 +12,23 @@ public class ConsoleProcess {
     private BufferedWriter bw;
     private BufferedReader br;
 
-    public ConsoleProcess(String commandToExecute) {
+    public ConsoleProcess(String commandToExecute, String workingDirectory) {
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
             System.out.println(System.getProperty("os.name"));
             pb = new ProcessBuilder("cmd.exe", "/c", commandToExecute);
         } else if (System.getProperty("os.name").toLowerCase().contains("linux")) {
             pb = new ProcessBuilder("/bin/bash", "-c", commandToExecute);
-        }
-        else {
+        } else {
             System.out.println(
                     "What niche OS you using there bud.. or how ignorant am I? OS: " + System.getProperty("os.name"));
             System.exit(1);
         }
-        pb.directory(new File(System.getProperty("user.dir")));
+        pb.directory(new File(workingDirectory));
         pb.redirectErrorStream(true);
+    }
+
+    public ConsoleProcess(String commandToExecute) {
+        this(commandToExecute, System.getProperty("user.dir"));
     }
 
     public void start() {
@@ -47,6 +50,7 @@ public class ConsoleProcess {
             e.printStackTrace();
         }
         p.destroy();
+        p = null;
     }
 
     public String readLine() {
@@ -67,5 +71,9 @@ public class ConsoleProcess {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean started() {
+        return p != null;
     }
 }
