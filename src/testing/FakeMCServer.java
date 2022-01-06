@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class FakeMCServer {
 
-    private static final int sleep = 1000;
+    private static final int sleep = 100;
 
     private static Runnable inputThread = () -> {
         Scanner scanner = new Scanner(System.in);

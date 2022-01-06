@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class Server implements Runnable {
 
-    private boolean rawPackets = false;
+    private boolean rawPackets = true;
     private boolean printCP = true;
 
     public static final int MAX_ATTEMPTS = 3;
@@ -24,7 +24,7 @@ public class Server implements Runnable {
     private int selectedSenderThreadNum = 0;
 
     private boolean disconnected = true;
-    private boolean saveCpOut = false;
+    private boolean saveCpOut = true;
 
     private static final String PREFIX_PING = "/i/";
     private static final String PREFIX_DISCONNECT = "/d/";
@@ -49,6 +49,8 @@ public class Server implements Runnable {
         cp.start();
         running = true;
 
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownHook, "shutdown hook"));
+
         // Receiving
         new Thread(this::receiveFromClients, "Receiving Thread").start();
 
@@ -72,6 +74,11 @@ public class Server implements Runnable {
             case "end" -> cp.end();
             default -> cp.writeLine(input);
         }
+    }
+
+    public void shutdownHook() {
+        System.out.println("shutting down lel pussy");
+        cp.end();
     }
 
     public void manageClients() {
@@ -125,7 +132,6 @@ public class Server implements Runnable {
     }
 
     public void readAllCP() {
-
         String line;
         while ((line = cp.readLine()) != null) {
             // only start saving
@@ -178,21 +184,25 @@ public class Server implements Runnable {
         }
 
         // nothing to send
-        if (messages == "")
+        if (messages.length() == 0)
             return;
 
         int numOfMessages = messages.length() / MAX_DATA_SIZE;
-        if (numOfMessages % MAX_DATA_SIZE == 0)
+        if (messages.length() % MAX_DATA_SIZE != 0)
             numOfMessages++;
-
+        System.out.println("------------------------length of messages: " + messages.length());
+        // send number of /o/ packets containing output sliced
         send(discordBot, PREFIX_OUTPUT_START + numOfMessages);
 
         for (int i = 0; i < numOfMessages; i++) {
             int beginIndex = MAX_DATA_SIZE * i;
             int endIndex = (MAX_DATA_SIZE * (i + 1) <= messages.length()) ? MAX_DATA_SIZE * (i + 1) : messages.length();
-            send(discordBot, PREFIX_OUTPUT + messages.substring(beginIndex, endIndex));
+            String sendString = messages.substring(beginIndex, endIndex);
+            send(discordBot, PREFIX_OUTPUT + sendString);
+            System.out.println(i + ": length " + sendString.length());
         }
 
+        // indicate done sending sliced packets
         send(discordBot, PREFIX_OUTPUT_END);
 
         cpOuts.clear();

@@ -49,6 +49,7 @@ public class ConsoleProcess {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("destroying process");
         p.destroy();
         p = null;
     }

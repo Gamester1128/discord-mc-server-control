@@ -1,0 +1,12 @@
+ fix node side splitting and sending to chat
+ remove all but one line of each exception
+ only send after server started
+ server started birb alert spam
+ start and stop Process
+ direct input java server side
+ utf-8 bytes sent
+ outside config
+
+
+DONE:
+

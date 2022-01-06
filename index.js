@@ -20,11 +20,10 @@ client.once('ready', () => {
 client.on('messageCreate', (message) => {
 
     //command for bot
-    if (message.content.startsWith('/')) {
+    if (message.content.startsWith('!')) {
         var command = message.content.substring(1, message.content.length);
-        console.log(command);
-
-        sendToCP('/m/' + command + '/e/', PORT, HOST);
+        //console.log(command);
+        //sendToCP('/m/' + command + '/e/', PORT, HOST);
     }
     //channel = client.channels.cache.get('912818100305559585');
     //channel.send('content');
@@ -36,6 +35,7 @@ client.on('messageCreate', (message) => {
     else if (message.content.toLowerCase().includes('sadge')) message.channel.send(copypasta.sadge);
 
 })
+
 
 // Get token and login
 const { token } = require('./config.json');
@@ -80,9 +80,14 @@ cp_client.on('message', (msg, rinfo) => {
 function flushToDiscord() {
     var message = output.join('');
     
-    var size = message % 4000;
-     
-    client.channels.cache.get(CHANNEL_GENERAL).send(message);
+    var messages = message.match(/(.|[\r\n]){1,2000}/g);
+    //console.log(messages);
+    //console.log("----------------num of messages: " + messages.length + " message size: " + message.length);
+    for (let i = 0; i < messages.length; i++) {
+        client.channels.cache.get(CHANNEL_GENERAL).send(messages[i]);
+        //console.log(i + ": length " + messages[i].length);
+    }
+
 }
 
 function sendToCP(msg, port, host) {
