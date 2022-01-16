@@ -4,14 +4,16 @@ import java.util.Scanner;
 
 public class FakeMCServer {
 
-    private static final int sleep = 100;
+    private static final int sleep = 750;
 
     private static Runnable inputThread = () -> {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String input = scanner.nextLine();
-            if (input.equals("stop"))
+            if (input.equals("stop")) {
+                System.out.println("[69:69:69] GOODBYE!!!!!");
                 System.exit(0);
+            }
             System.out.println(
                     "[CANT BE ASKED FOR TIME] [FAKEMINECRAFTSERVER/ERROR] : no commands exist! input sent: " + input);
         }

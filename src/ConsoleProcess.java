@@ -7,8 +7,8 @@ import java.io.OutputStreamWriter;
 
 public class ConsoleProcess {
 
-    private ProcessBuilder pb;
     private Process p;
+    private ProcessBuilder pb;
     private BufferedWriter bw;
     private BufferedReader br;
 
@@ -32,6 +32,10 @@ public class ConsoleProcess {
     }
 
     public void start() {
+        if (started()) {
+            System.out.println("WARNING - ATTEMPTING TO START MULTIPLE CONSOLE PROCESSES");
+            return;
+        }
         try {
             System.out.println(pb.directory());
             p = pb.start();
@@ -40,21 +44,29 @@ public class ConsoleProcess {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        new Thread(() -> {
+            try {
+                p.waitFor();
+                br.close();
+                bw.close();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("destroying process");
+            p.destroyForcibly();
+            p = null;
+        }, "Cleans up when process is done").start();
     }
 
-    public void end() {
-        try {
-            br.close();
-            bw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("destroying process");
-        p.destroy();
-        p = null;
+    @Deprecated
+    public void stop() {
+
     }
 
     public String readLine() {
+        if (br == null)
+            return null;
         try {
             String line = br.readLine();
             return line;
@@ -65,6 +77,8 @@ public class ConsoleProcess {
     }
 
     public void writeLine(String line) {
+        if (bw == null)
+            return;
         try {
             bw.write(line);
             bw.write("\n");

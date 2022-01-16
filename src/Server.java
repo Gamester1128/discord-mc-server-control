@@ -25,6 +25,8 @@ public class Server implements Runnable {
 
     private boolean disconnected = true;
     private boolean saveCpOut = true;
+    private boolean serverStarting = false;
+    private boolean serverStopping = false;
 
     private static final String PREFIX_PING = "/i/";
     private static final String PREFIX_DISCONNECT = "/d/";
@@ -34,9 +36,11 @@ public class Server implements Runnable {
     private static final String PREFIX_OUTPUT_END = "/e/";
     private static final String PREFIX_MESSAGE = "/m/";
 
+    private Object readCPLock = new Object();
+
     public Server(int port) {
-        // cp = new ConsoleProcess("cd fakeserver && java -jar fakeserver.jar");
-        cp = new ConsoleProcess("run2.bat", "C:\\mc server\\vanilla\\1.18prerel5");
+        cp = new ConsoleProcess("cd fakeserver && java -jar fakeserver.jar");
+        // cp = new ConsoleProcess("run2.bat", "C:\\mc server\\vanilla\\1.18prerel5");
 
         try {
             socket = new DatagramSocket(port);
@@ -46,7 +50,6 @@ public class Server implements Runnable {
     }
 
     public void run() {
-        cp.start();
         running = true;
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownHook, "shutdown hook"));
@@ -62,23 +65,49 @@ public class Server implements Runnable {
 
         // input into stdin of cp
         Scanner scanner = new Scanner(System.in);
+        String input;
         while (running) {
-            cp.writeLine(scanner.nextLine());
+            input = scanner.nextLine();
+            if (input.startsWith("!"))
+                processStdinToCP(input.substring(1));
+            else {
+                if (cp.started())
+                    cp.writeLine(input);
+            }
         }
         scanner.close();
     }
 
     private void processStdinToCP(String input) {
         switch (input) {
-            case "start" -> cp.start();
-            case "end" -> cp.end();
-            default -> cp.writeLine(input);
+            case "start" -> startCP();
+            default -> System.out.println("ERROR : Unknown command, input=" + input);
         }
     }
 
+    private void startCP() {
+        if (!cp.started()) {
+            cp.start();
+            synchronized (readCPLock) {
+                readCPLock.notify();
+            }
+        } else if (serverStarting) {
+            System.out.println("ERROR - Attempting to start server when still starting");
+        } else {
+            System.out.println("ERROR - Attempting to start server when it is already started");
+        }
+    }
+
+    private void stopCP() {
+        if (cp.started())
+            cp.writeLine("stop");
+    }
+
     public void shutdownHook() {
-        System.out.println("shutting down lel pussy");
-        cp.end();
+        if (cp.started()) {
+            System.out.println("shutting down lel pussy");
+            stopCP();
+        }
     }
 
     public void manageClients() {
@@ -86,9 +115,9 @@ public class Server implements Runnable {
             while (running) {
                 if (discordBot == null)
                     try {
-                        System.out.println("now waiting...");
+                        System.out.println("NOTICE - waiting to manage client...");
                         wait();
-                        System.out.println("now not waiting");
+                        System.out.println("NOTICE - managing client...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -133,16 +162,35 @@ public class Server implements Runnable {
 
     public void readAllCP() {
         String line;
-        while ((line = cp.readLine()) != null) {
+        while (running) {
+            line = cp.readLine();
+            synchronized (readCPLock) {
+                if (line == null) {
+                    try {
+                        System.out.println("NOTICE - Waiting for cp to start...");
+                        readCPLock.wait();
+                        System.out.println("NOTICE - Reading stdout of cp...");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (line == null)
+                continue;
             // only start saving
-            if (line.contains("Done (")) {
+            if (line.contains("Done ("))
                 saveCpOut = true;
-            }
-            if (saveCpOut) {
-                if (printCP)
-                    System.out.println(line);
+                serverStarting = false;
+            if (!saveCpOut)
+                return;
+            if (printCP)
+                System.out.println(line);
+
+            // print only first line of exceptions
+            if (line.toLowerCase().contains("exception"))
+                cpOuts.add(line.substring(0, line.indexOf('\n')));
+            else
                 cpOuts.add(line);
-            }
         }
     }
 
