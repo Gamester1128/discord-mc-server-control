@@ -56,6 +56,7 @@ public class ConsoleProcess {
             System.out.println("destroying process");
             p.destroyForcibly();
             p = null;
+            Main.server.flush();
         }, "Cleans up when process is done").start();
     }
 

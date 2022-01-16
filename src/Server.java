@@ -68,20 +68,20 @@ public class Server implements Runnable {
         String input;
         while (running) {
             input = scanner.nextLine();
-            if (input.startsWith("!"))
-                processStdinToCP(input.substring(1));
-            else {
-                if (cp.started())
-                    cp.writeLine(input);
-            }
+            processStdinToCP(input);
         }
         scanner.close();
     }
 
     private void processStdinToCP(String input) {
-        switch (input) {
-            case "start" -> startCP();
-            default -> System.out.println("ERROR : Unknown command, input=" + input);
+        if (input.startsWith("!"))
+            switch (input) {
+                case "!start" -> startCP();
+                default -> System.out.println("ERROR : Unknown command, input=" + input);
+            }
+        else {
+            if (cp.started())
+                cp.writeLine(input);
         }
     }
 
@@ -164,8 +164,8 @@ public class Server implements Runnable {
         String line;
         while (running) {
             line = cp.readLine();
-            synchronized (readCPLock) {
-                if (line == null) {
+            if (line == null) {
+                synchronized (readCPLock) {
                     try {
                         System.out.println("NOTICE - Waiting for cp to start...");
                         readCPLock.wait();
@@ -177,20 +177,24 @@ public class Server implements Runnable {
             }
             if (line == null)
                 continue;
-            // only start saving
-            if (line.contains("Done ("))
-                saveCpOut = true;
-                serverStarting = false;
+            line = filterMinecraftOutput(line);
             if (!saveCpOut)
                 return;
             if (printCP)
                 System.out.println(line);
 
-            // print only first line of exceptions
-            if (line.toLowerCase().contains("exception"))
-                cpOuts.add(line.substring(0, line.indexOf('\n')));
-            else
+            // filter
+            if (line != "")
                 cpOuts.add(line);
+
+            if (line.contains("Done (")) {
+                saveCpOut = true;
+                serverStarting = false;
+                flush();
+                sleep(300);
+                send(discordBot,
+                        "/m/@everyone BIRB ALERT https://tenor.com/view/space-laces-vaultage-bird-alert-vaultage003-gif-20725836");
+            }
         }
     }
 
@@ -213,9 +217,11 @@ public class Server implements Runnable {
                 notify();
             }
 
-        } else if (data.startsWith("/m/")) {
-            System.out.println("message: " + data.split("/m/|/e/")[1]);
-
+        } else if (data.startsWith(PREFIX_MESSAGE)) {
+            String message = data.split("/m/|/e/")[1];
+            processStdinToCP(message);
+            sleep(300);
+            flush();
         } else if (data.startsWith(PREFIX_DISCONNECT)) {
             System.out.println("Successfully disconnected discordBot: " + discordBot);
         } else if (data.startsWith(PREFIX_PING)) {

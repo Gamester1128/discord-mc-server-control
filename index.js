@@ -21,9 +21,10 @@ client.on('messageCreate', (message) => {
 
     //command for bot
     if (message.content.startsWith('!')) {
-        var command = message.content.substring(1, message.content.length);
+        let command = message.content.substring(1, message.content.length);
+        sendToCP('/m/' + command + '/e/', PORT, HOST);
+
         //console.log(command);
-        //sendToCP('/m/' + command + '/e/', PORT, HOST);
     }
     //channel = client.channels.cache.get('912818100305559585');
     //channel.send('content');
@@ -74,12 +75,13 @@ cp_client.on('message', (msg, rinfo) => {
     else if (message.startsWith(PREFIX_OUTPUT_START)) output = new Array(parseInt(message.substring(3)));
     else if (message.startsWith(PREFIX_OUTPUT)) output.push(message.substring(3));
     else if (message.startsWith(PREFIX_OUTPUT_END)) flushToDiscord();
+    else if (message.startsWith(PREFIX_MESSAGE)) client.channels.cache.get(CHANNEL_GENERAL).send(message.substring(3));
 
 });
 
 function flushToDiscord() {
     var message = output.join('');
-    
+
     var messages = message.match(/(.|[\r\n]){1,2000}/g);
     //console.log(messages);
     //console.log("----------------num of messages: " + messages.length + " message size: " + message.length);
