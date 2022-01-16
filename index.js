@@ -1,7 +1,8 @@
 const { Client, Intents, Emoji, ClientUser } = require('discord.js');
 const copypasta = require("./copypasta.js")
 
-const CHANNEL_GENERAL = '912818100305559585';
+const CHANNEL_GENERAL = '866793005465206817';
+const CHANNEL_SERVER = '927313776343130192';
 
 //const channel = Client.channels.cache.get(912818100305559585);
 
@@ -18,7 +19,7 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', (message) => {
-
+    if (message.equals("!")) return;
     //command for bot
     if (message.content.startsWith('!')) {
         let command = message.content.substring(1, message.content.length);
@@ -44,7 +45,7 @@ client.login(token);
 
 // CLIENT FOR CONSOLE PROCESS SIDE STUFF
 
-const PRINT_PACKETS = true;
+const PRINT_PACKETS = false;
 
 const PREFIX_PING = '/i/';
 const PREFIX_DISCONNECT = '/d/';
@@ -86,7 +87,7 @@ function flushToDiscord() {
     //console.log(messages);
     //console.log("----------------num of messages: " + messages.length + " message size: " + message.length);
     for (let i = 0; i < messages.length; i++) {
-        client.channels.cache.get(CHANNEL_GENERAL).send(messages[i]);
+        client.channels.cache.get(CHANNEL_SERVER).send(messages[i]);
         //console.log(i + ": length " + messages[i].length);
     }
 

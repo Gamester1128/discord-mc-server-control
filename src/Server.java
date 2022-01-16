@@ -253,7 +253,7 @@ public class Server implements Runnable {
             int endIndex = (MAX_DATA_SIZE * (i + 1) <= messages.length()) ? MAX_DATA_SIZE * (i + 1) : messages.length();
             String sendString = messages.substring(beginIndex, endIndex);
             send(discordBot, PREFIX_OUTPUT + sendString);
-            System.out.println(i + ": length " + sendString.length());
+            //System.out.println(i + ": length " + sendString.length());
         }
 
         // indicate done sending sliced packets
