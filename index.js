@@ -4,6 +4,11 @@ const copypasta = require("./copypasta.js")
 const CHANNEL_GENERAL = '866793005465206817';
 const CHANNEL_SERVER = '927313776343130192';
 
+// testing ids
+//const CHANNEL_GENERAL = '912818100305559585';
+//const CHANNEL_SERVER = '925151970921173032';
+
+
 //const channel = Client.channels.cache.get(912818100305559585);
 
 const client = new Client({
@@ -29,7 +34,7 @@ client.on('messageCreate', (message) => {
     }
     //channel = client.channels.cache.get('912818100305559585');
     //channel.send('content');
-    if (message.content.toLowerCase().includes('checkmate argument')) message.reply({ content: copypasta.checkmateArgument })
+    if (message.content.toLowerCase().includes('checkmate argument')) message.channel.send({ content: copypasta.checkmateArgument })
     else if (message.content.includes('rahul')) message.reply({ content: "the victim of someone's evil wrenches!!!!! his poor lambda duck friend Sadge" })
     else if (message.content === 'ping') message.react('👀')
     else if (message.content === 'deleena') message.channel.send({ content: copypasta.susASCII })
@@ -54,6 +59,7 @@ const PREFIX_OUTPUT = '/o/';
 const PREFIX_OUTPUT_START = '/s/'
 const PREFIX_OUTPUT_END = '/e/'
 const PREFIX_MESSAGE = "/m/";
+const PREFIX_BOTCHANNEL = "/b/";
 
 const dgram = require('dgram');
 const { channel } = require('diagnostics_channel');
@@ -77,6 +83,7 @@ cp_client.on('message', (msg, rinfo) => {
     else if (message.startsWith(PREFIX_OUTPUT)) output.push(message.substring(3));
     else if (message.startsWith(PREFIX_OUTPUT_END)) flushToDiscord();
     else if (message.startsWith(PREFIX_MESSAGE)) client.channels.cache.get(CHANNEL_GENERAL).send(message.substring(3));
+    else if (message.startsWith(PREFIX_BOTCHANNEL)) client.channels.cache.get(CHANNEL_SERVER).send(message.substring(3));
 
 });
 

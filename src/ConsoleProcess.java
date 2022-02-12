@@ -62,7 +62,6 @@ public class ConsoleProcess {
 
     @Deprecated
     public void stop() {
-
     }
 
     public String readLine() {
@@ -91,5 +90,12 @@ public class ConsoleProcess {
 
     public boolean started() {
         return p != null;
+    }
+
+    public void notifyProcess() {
+        if (p == null)
+            return;
+            System.out.println("NOTICE - Notifying cp..");
+        p.notify();
     }
 }

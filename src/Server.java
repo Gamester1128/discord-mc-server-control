@@ -9,6 +9,8 @@ public class Server implements Runnable {
 
     private boolean rawPackets = true;
     private boolean printCP = true;
+    private boolean printProgress = true;
+    public boolean shouldSendPercent = true;
 
     public static final int MAX_ATTEMPTS = 3;
     private static final int MAX_DATA_SIZE = 500;
@@ -22,9 +24,11 @@ public class Server implements Runnable {
     private Thread senderThread;
     private int currSenderThreadNum = 0;
     private int selectedSenderThreadNum = 0;
+    private int lineCount = 0;
+    private final int avgLineCount = 3719;
 
     private boolean disconnected = true;
-    private boolean saveCpOut = true;
+    private boolean sendCpOut = true;
     private boolean serverStarting = false;
     private boolean serverStopping = false;
 
@@ -35,12 +39,15 @@ public class Server implements Runnable {
     private static final String PREFIX_OUTPUT_START = "/s/";
     private static final String PREFIX_OUTPUT_END = "/e/";
     private static final String PREFIX_MESSAGE = "/m/";
+    private static final String PREFIX_BOTCHANNEL = "/b/";
 
     private Object readCPLock = new Object();
+    private Object flushLock = new Object();
 
     public Server(int port) {
-        cp = new ConsoleProcess("cd fakeserver && java -jar fakeserver.jar");
+        // cp = new ConsoleProcess("cd fakeserver && java -jar fakeserver.jar");
         // cp = new ConsoleProcess("run2.bat", "C:\\mc server\\vanilla\\1.18prerel5");
+        cp = new ConsoleProcess("LaunchServer.bat", "C:\\mc server\\mc server modded\\stoneblock");
 
         try {
             socket = new DatagramSocket(port);
@@ -77,6 +84,7 @@ public class Server implements Runnable {
         if (input.startsWith("!"))
             switch (input) {
                 case "!start" -> startCP();
+                case "!notify" -> cp.notifyProcess();
                 default -> System.out.println("ERROR : Unknown command, input=" + input);
             }
         else {
@@ -178,17 +186,18 @@ public class Server implements Runnable {
             if (line == null)
                 continue;
             line = filterMinecraftOutput(line);
-            if (!saveCpOut)
-                return;
+
             if (printCP)
                 System.out.println(line);
 
             // filter
-            if (line != "")
-                cpOuts.add(line);
+            if (line == "")
+                return;
+
+            cpOuts.add(line);
 
             if (line.contains("Done (")) {
-                saveCpOut = true;
+                sendCpOut = true;
                 serverStarting = false;
                 flush();
                 sleep(300);
@@ -232,34 +241,54 @@ public class Server implements Runnable {
     }
 
     public void flush() {
-        String messages = "";
-        for (int i = 0; i < cpOuts.size(); i++) {
-            messages += cpOuts.get(i) + "\n";
+
+        synchronized (flushLock) {
+            String messages = "";
+            for (int i = 0; i < cpOuts.size(); i++) {
+                messages += cpOuts.get(i) + "\n";
+            }
+
+            // nothing to send
+            if (messages.length() == 0)
+                return;
+
+            // send progress
+            lineCount += cpOuts.size();
+            if (serverStarting && printProgress) {
+                int percent = (lineCount / avgLineCount) * 100;
+                percent = Math.min(percent, 100);
+                if (percent == 69)
+                    send(discordBot, "/b/Starting: ( ͡° ͜ʖ ͡°) %");
+                else
+                    send(discordBot, "/b/Starting: " + percent + "%");
+            }
+            // should send console process output to discord bot
+            if (!sendCpOut) {
+                cpOuts.clear();
+                return;
+            }
+
+            int numOfMessages = messages.length() / MAX_DATA_SIZE;
+            if (messages.length() % MAX_DATA_SIZE != 0)
+                numOfMessages++;
+            System.out.println("------------------------length of messages: " + messages.length());
+            // send number of /o/ packets containing output sliced
+            send(discordBot, PREFIX_OUTPUT_START + numOfMessages);
+
+            for (int i = 0; i < numOfMessages; i++) {
+                int beginIndex = MAX_DATA_SIZE * i;
+                int endIndex = (MAX_DATA_SIZE * (i + 1) <= messages.length()) ? MAX_DATA_SIZE * (i + 1)
+                        : messages.length();
+                String sendString = messages.substring(beginIndex, endIndex);
+                send(discordBot, PREFIX_OUTPUT + sendString);
+                // System.out.println(i + ": length " + sendString.length());
+            }
+
+            // indicate done sending sliced packets
+            send(discordBot, PREFIX_OUTPUT_END);
+
+            cpOuts.clear();
         }
-
-        // nothing to send
-        if (messages.length() == 0)
-            return;
-
-        int numOfMessages = messages.length() / MAX_DATA_SIZE;
-        if (messages.length() % MAX_DATA_SIZE != 0)
-            numOfMessages++;
-        System.out.println("------------------------length of messages: " + messages.length());
-        // send number of /o/ packets containing output sliced
-        send(discordBot, PREFIX_OUTPUT_START + numOfMessages);
-
-        for (int i = 0; i < numOfMessages; i++) {
-            int beginIndex = MAX_DATA_SIZE * i;
-            int endIndex = (MAX_DATA_SIZE * (i + 1) <= messages.length()) ? MAX_DATA_SIZE * (i + 1) : messages.length();
-            String sendString = messages.substring(beginIndex, endIndex);
-            send(discordBot, PREFIX_OUTPUT + sendString);
-            //System.out.println(i + ": length " + sendString.length());
-        }
-
-        // indicate done sending sliced packets
-        send(discordBot, PREFIX_OUTPUT_END);
-
-        cpOuts.clear();
     }
 
     public String filterMinecraftOutput(String line) {
@@ -277,6 +306,10 @@ public class Server implements Runnable {
     }
 
     public void send(ServerClient client, String message) {
+        if (client == null) {
+            System.out.println("WARNING - Attempting to send message to null client, message:" + message);
+            return;
+        }
         byte[] data = message.getBytes();
         DatagramPacket packet = new DatagramPacket(data, data.length, client.ip, client.port);
 
